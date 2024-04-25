@@ -2,7 +2,7 @@ import React, {useState} from "react";
 import {Button, Form} from "react-bootstrap";
 import {useNavigate} from "react-router-dom";
 
-const LogInPage = () => {
+const RegisterPage = () => {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const navigator = useNavigate()
@@ -17,7 +17,7 @@ const LogInPage = () => {
         };
 
         try {
-            const response = await fetch('http://localhost:8080/login', {
+            const response = await fetch('http://localhost:8080/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -26,24 +26,25 @@ const LogInPage = () => {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to login user');
+                throw new Error('Failed to reg user');
             }
 
-            var token = await response.text();
-            if(token !== "no authorized"){
-                localStorage.setItem("token", token)
-                navigator("/")
+            const token = await response.text();
+            if(token === "Registration complete!"){
+                navigator("/login")
+            }else{
+                alert('this email already taken')
             }
 
-            console.log('User login -- ' + token);
+            console.log('User reg -- ' + token);
         } catch (error) {
-            console.error('Error login user:', error.message);
+            console.error('Error reg user:', error.message);
         }
     };
 
     return (
         <div>
-            <h1>Login page</h1>
+            <h1>Registration page</h1>
             <Form onSubmit={handleSubmit}>
                 <Form.Group controlId="formBasicEmail">
                     <Form.Label>Email address</Form.Label>
@@ -64,11 +65,11 @@ const LogInPage = () => {
                         onChange={(e) => setPassword(e.target.value)}
                     />
                 </Form.Group>
-                <Button variant="primary" type="submit" className="ml-2">Login</Button>
-                <Button onClick={() => navigator("/registration")}>Registration</Button>
+                <Button variant="primary" type="submit" className="ml-2">Registration</Button>
+                <Button onClick={() => navigator("/login")}>Login</Button>
             </Form>
         </div>
     )
 }
 
-export default LogInPage;
+export default RegisterPage;

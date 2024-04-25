@@ -1,11 +1,20 @@
 import React, {useEffect, useState} from "react";
+import {useNavigate} from "react-router-dom";
+import {Button, ListGroup, ListGroupItem} from "react-bootstrap";
+import { toast } from 'react-toastify'
+import App from "../App";
 
 const AllIceCreamsPage = () => {
 
     const [items, setItems] = useState([]);
+    const [token, setToken] = useState('')
+    const navigator = useNavigate()
+
 
     useEffect(() => {
-        // Функция для загрузки списка товаров с сервера
+
+        setToken(localStorage.getItem("token"))
+
         const fetchItems = async () => {
             try {
                 const response = await fetch('http://localhost:8080/allIcecreams');
@@ -19,25 +28,85 @@ const AllIceCreamsPage = () => {
             }
         };
 
-        // Вызываем функцию загрузки списка товаров при монтировании компонента
         fetchItems();
     }, []);
 
+    const addToCard = async (item) => {
+        if (token === null) {
+            navigator("/login")
+        }
+
+        try {
+            const formData = new URLSearchParams()
+            formData.append('itemId', item.id)
+            formData.append('token', token)
+
+
+            const response = await fetch('http://localhost:8080/cart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: formData
+            })
+
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok')
+            }
+
+            const data = await response.text()
+            if (data !== "Invalid token") {
+                toast.success("item added!")
+            }
+        } catch (error) {
+            console.error('There was an error!', error)
+        }
+    }
+
+    const logOutButton = () => {
+        return (
+            <Button variant="outline-danger" onClick={logOut}>lot out</Button>
+        )
+    }
+    const navToCart = () => {
+        return (
+            <Button variant="success" onClick={() => navigator("/cart")}>cart</Button>
+        )
+    }
+
+    const logOut = () => {
+        localStorage.removeItem("token")
+        navigator("/login")
+    }
+    const profileGroup = () => {
+        if (token !== null) {
+            return (
+                <div align="right">
+                    {navToCart()}
+                    {logOutButton()}
+                </div>
+            )
+        }
+    }
+
     return (
-        <div>
+        <div className="App" align="center">
             <h1>ALL ICECREAMS</h1>
-            <ul>
+            {profileGroup()}
+            <ListGroup>
                 {
                     items.map((item, index) => (
-                        <li key={index}>
+                        <ListGroupItem className="ItemCard" key={index}>
                             <h3>{item.name}</h3>
                             <p>{item.brand}</p>
                             <p>{item.type}</p>
                             <p>{item.price}</p>
-                        </li>
+                            <Button variant="warning" onClick={() => addToCard(item)}>add to card</Button>
+                        </ListGroupItem>
                     ))
                 }
-            </ul>
+            </ListGroup>
         </div>
     )
 }
